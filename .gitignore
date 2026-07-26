@@ -65,6 +65,16 @@ $RECYCLE.BIN/
 # Планы Claude Code (личные)
 .claude/plans/
 
+# Агенты и скиллы, не относящиеся к дипломному проекту (личные/учебные/roadmap).
+# Лежат локально, в репозиторий не попадают.
+/.claude/agents/learn-assistant.md
+/.claude/agents/python-coder.md
+/.claude/skills/learn/
+/.claude/skills/python/
+/.claude/skills/qa-essay-structured/
+/.claude/skills/qa-essay-free/
+/.claude/skills/qa-generate-test-cases/
+
 # Среда / кэш / внешние инструменты
 .playwright-mcp/
 .idea/

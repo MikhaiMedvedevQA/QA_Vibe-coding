@@ -20,25 +20,26 @@
 В проекте используются субагенты с разделёнными зонами ответственности:
 
 - **router** — выбирает, какой агент отвечает за запрос. Описание: `.claude/agents/router.md`.
-- **learn-assistant** — помощник в обучении автоматизации. Описание: `.claude/agents/learn-assistant.md`.
-- **python-coder** — создаёт и ревьюит Python-код для автотестов. Описание: `.claude/agents/python-coder.md`.
-- **qa-assistant** — ассистент QA-инженера: тест-кейсы, баги, оценки. Описание: `.claude/agents/qa-assistant.md`.
+- **qa-assistant** — ассистент QA-инженера: чек-листы, тест-кейсы, баги, оценки по спецификациям ЭФ. Описание: `.claude/agents/qa-assistant.md`.
 
 Реестр агентов: `.claude/agents/*.md` с YAML-шапкой (`name`, `description`, `model`, `tools`).
 
-Модели:
-- `python-coder` — `claude-opus-4-8` (сложные задачи кода и ревью).
-- Остальные агенты — `claude-sonnet-4-6`.
+Модели: все агенты — `claude-sonnet-4-6`.
 
 Скилы агентов лежат в `.claude/skills/<имя-скилла>/SKILL.md`:
 
 - `.claude/skills/router/routing-decision/SKILL.md` — выбор агента и маршрутизация.
-- `.claude/skills/learn/explain-topic/SKILL.md` — обучающие скилы.
-- `.claude/skills/python/create-test-template/SKILL.md` — кодинговые скилы.
-- `.claude/skills/qa-generate-test-cases/SKILL.md` — генерация тест-кейсов из User Story.
-- `.claude/skills/qa-essay-structured/SKILL.md` — эссе для собеседования Manual QA (структурированная форма).
-- `.claude/skills/qa-essay-free/SKILL.md` — эссе для собеседования Manual QA (свободная форма).
 - `.claude/skills/shared/naming-conventions/SKILL.md` — общие скилы (например, правила нейминга).
+- `.claude/skills/required-fields/SKILL.md` — обязательность полей ЭФ.
+- `.claude/skills/default-values-checklist/SKILL.md` — значения по умолчанию в ЭФ.
+- `.claude/skills/field-availability/SKILL.md` — условная доступность/видимость полей ЭФ.
+- `.claude/skills/validation-positive/SKILL.md` — позитивная валидация.
+- `.claude/skills/validation-negative/SKILL.md` — негативная валидация.
+- `.claude/skills/validation-full/SKILL.md` — полная валидация.
+- `.claude/skills/qa-full-coverage/SKILL.md` — полное покрытие (v1).
+- `.claude/skills/qa-full-coverage-v2/SKILL.md` — полное покрытие (v2).
+- `.claude/skills/test-analysis/SKILL.md` — анализ ТЗ на тестируемость.
+- `.claude/skills/op-scope/SKILL.md` — разбор ОП в скоуп тестирования.
 
 Конфигурации и настройки:
 

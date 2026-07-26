@@ -5,19 +5,17 @@
 ## Структура
 
 - `.claude/skills/router/routing-decision/SKILL.md` — скилы роутера (выбор агента, уточнение запроса).
-- `.claude/skills/learn/explain-topic/SKILL.md` — скилы агента обучения автоматизации.
-- `.claude/skills/python/create-test-template/SKILL.md` — скилы кодингового агента Python.
-- `.claude/skills/qa-generate-test-cases/SKILL.md` — генерация тест-кейсов из User Story.
-- `.claude/skills/qa-essay-structured/SKILL.md` — эссе для собеседования Manual QA (структурированная форма).
-- `.claude/skills/qa-essay-free/SKILL.md` — эссе для собеседования Manual QA (свободная форма).
 - `.claude/skills/shared/naming-conventions/SKILL.md` — общие скилы, используемые несколькими агентами.
-- `.claude/skills/pd-review/SKILL.md` — анализ высокоуровневого описания проекта.
+- `.claude/skills/required-fields/SKILL.md` — обязательность полей ЭФ.
+- `.claude/skills/default-values-checklist/SKILL.md` — значения по умолчанию в ЭФ.
+- `.claude/skills/field-availability/SKILL.md` — условная доступность/видимость/очистка полей ЭФ.
+- `.claude/skills/validation-positive/SKILL.md` — позитивная валидация.
+- `.claude/skills/validation-negative/SKILL.md` — негативная валидация.
+- `.claude/skills/validation-full/SKILL.md` — полная валидация.
+- `.claude/skills/qa-full-coverage/SKILL.md` — полное покрытие (v1).
+- `.claude/skills/qa-full-coverage-v2/SKILL.md` — полное покрытие (v2).
 - `.claude/skills/test-analysis/SKILL.md` — анализ технического задания на тестируемость.
-
-## Когда какой вариант использовать
-
-- **Структурированный** — когда нужна предсказуемая разбивка по блокам и удобная точечная правка.
-- **Свободная форма** — когда нужен «живой» монолитный рассказ без видимых швов между разделами.
+- `.claude/skills/op-scope/SKILL.md` — разбор ОП в скоуп тестирования.
 
 ## Формат файла скилла
 

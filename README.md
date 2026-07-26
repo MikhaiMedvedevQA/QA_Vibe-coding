@@ -191,11 +191,10 @@ python tools/anonymize_gui/app.py
 | `validation-full`           | полная валидация                                                 | JSON + опц. текстовое ТЗ   |
 | `qa-full-coverage`          | полное покрытие (v1)                                            | JSON + опц. текстовое ТЗ   |
 | `qa-full-coverage-v2`        | полное покрытие (v2)                                            | JSON + опц. текстовое ТЗ   |
-| `qa-generate-test-cases`    | тест-кейсы из User Story                                         | текстовое ТЗ               |
-| `test-analysis`             | анализ результатов прогона                                       | данные прогона             |
+| `test-analysis`             | анализ ТЗ на тестируемость                                       | текстовое ТЗ               |
 | `op-scope`                  | разбор ОП в скоуп тестирования                                   | текстовое ОП               |
 
-Вспомогательные: `qa-essay-structured` / `qa-essay-free` (эссе-самопрезентация Manual QA), `learn/explain-topic` (конспекты), `python/create-test-template` (шаблоны автотестов), `shared/naming-conventions`, `router/routing-decision`.
+Вспомогательные: `shared/naming-conventions` (правила нейминга), `router/routing-decision` (логика маршрутизации).
 
 ## Тесты
 
