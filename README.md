@@ -107,7 +107,7 @@ python tools/anonymize/anonymize.py path/to/spec.xlsx
 │   └── anonymize_gui/        # десктоп-GUI на Tkinter
 │       └── app.py            # python tools/anonymize_gui/app.py
 ├── .claude/
-│   ├── agents/               # субагенты: router, qa-assistant, python-coder, learn-assistant
+│   ├── agents/               # субагенты: router, qa-assistant
 │   └── skills/               # скиллы генерации чек-листов и вспомогательные (см. таблицу)
 ├── templates/
 │   └── test-case/             # образцы стиля чек-листов (Кейсы.xlsx и др.)
@@ -196,7 +196,11 @@ python tools/anonymize_gui/app.py
 | `test-analysis`             | анализ ТЗ на тестируемость                                       | текстовое ТЗ               |
 | `op-scope`                  | разбор ОП в скоуп тестирования                                   | текстовое ОП               |
 
-Вспомогательные: `shared/naming-conventions` (правила нейминга), `router/routing-decision` (логика маршрутизации).
+Вспомогательные: `shared/naming-conventions` (правила нейминга), `router/routing-decision` (логика маршрутизации), `qaagent-repo-guide` (гид по репозиторию: запуск, тесты, правки, онбординг).
+
+### Гид по репозиторию (`qaagent-repo-guide`)
+
+Отдельный скилл-рукиоводство для Claude Code и новых коллег: структура репозитория, первая настройка (venv, зависимости, словари, `mapping.json`), запуск анонимизатора в CLI и GUI, прогон тестов и проверка ошибок, рабочий процесс правок, правила актуализации этого README и блок конфиденциальности (что нельзя коммитить). Включает таблицу частых проблем с решениями и короткий онбординг одним абзацем. Описание — в [`.claude/skills/qaagent-repo-guide/SKILL.md`](.claude/skills/qaagent-repo-guide/SKILL.md).
 
 ## Тесты
 
@@ -224,7 +228,7 @@ python -m pytest
 
 - [x] Анонимайзер: извлечение, замена сущностей, устойчивый маппинг, JSON-датасет, review-механизм, омоглиф-фикс, GUI.
 - [x] Скиллы: чек-листы по обязательности, дефолтам, доступности, валидации, полному покрытию.
-- [x] Агенты: `router` + `qa-assistant` + `python-coder` + `learn-assistant`.
+- [x] Агенты: `router` + `qa-assistant`.
 - [x] Тесты: pytest-кейсы на детекторы и review-механизм.
 - [ ] Генерация автотестов на Python (Selenium + pytest + Allure) из того же JSON-датасета.
 - [ ] Сравнение версий спецификаций как diff двух JSON.

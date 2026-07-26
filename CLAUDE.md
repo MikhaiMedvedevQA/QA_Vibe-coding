@@ -40,6 +40,7 @@
 - `.claude/skills/qa-full-coverage-v2/SKILL.md` — полное покрытие (v2).
 - `.claude/skills/test-analysis/SKILL.md` — анализ ТЗ на тестируемость.
 - `.claude/skills/op-scope/SKILL.md` — разбор ОП в скоуп тестирования.
+- `.claude/skills/qaagent-repo-guide/SKILL.md` — гид по репозиторию: структура, запуск анонимизатора (CLI/GUI), тесты, правки, обновление README, онбординг коллег.
 
 Конфигурации и настройки:
 
