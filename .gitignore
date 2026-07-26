@@ -1,0 +1,117 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.env
+.env.*
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+dist/
+build/
+
+# Playwright / Selenium
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+selenium-screenshots/
+
+# IDE / редакторы
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.zed/
+
+# Obsidian
+.obsidian/
+
+# Системные файлы Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.bak
+*.swp
+*.log
+
+# Git
+*.orig
+
+# Локальные настройки Claude Code
+.claude/settings.local.json
+
+# MCP-конфиг с токенами и секретами
+.claude/mcp.json
+.mcp.json
+.env
+.env.*
+# .env.example — шаблон без секретов, нужен в репозитории
+!.env.example
+
+# Планы Claude Code (личные)
+.claude/plans/
+
+# Среда / кэш / внешние инструменты
+.playwright-mcp/
+.idea/
+
+# Рабочие и личные материалы, не относящиеся к дипломному проекту
+/work/
+/references/
+/learn/
+
+# templates: в репозиторий попадает только templates/test-case/
+/templates/*
+!/templates/test-case/
+
+# reports: в репозиторий попадает только reports/Diplom Project/project-card.md
+/reports/*
+!/reports/Diplom Project/
+/reports/Diplom Project/README.md
+
+# Личные файлы в корне репозитория
+/2026-07-01*.md
+/2026-07-21*.md
+/task1.txt
+/whisper-guide.md
+/download_cli.sh
+/llm-gemma-4-4-32k
+/Запуск анонимайзера.txt
+/агент-Roles.md
+
+# Конфиденциальные словари сущностей и маппинг (реальные данные).
+# В репозитории остаются только .example-шаблоны; реальные файлы — локально.
+/tools/anonymize/dictionaries/persons.txt
+/tools/anonymize/dictionaries/banks.txt
+/tools/anonymize/dictionaries/insurance.txt
+/tools/anonymize/dictionaries/products.txt
+/tools/anonymize/dictionaries/orgs.txt
+/tools/anonymize/dictionaries/ignore.txt
+/tools/anonymize/mapping.json
+
+# Результаты прогонов анонимизатора (обезличенные выходы + ассеты)
+/tools/anonymize/anonimized/
+anonimized/
+*_anon.md
+*_anon.json
+*_anon_review.json
+*_anon_assets/
+
+# Вспомогательные/legacy-скрипты в tools/ (не относятся к ядру дипломного проекта).
+# В репозитории остаются только tools/anonymize/ и tools/anonymize_gui/.
+/tools/*.py
+/tools/*.txt

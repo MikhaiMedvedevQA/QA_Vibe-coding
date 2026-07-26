@@ -1,0 +1,4 @@
+PyMuPDF>=1.23
+python-docx>=1.0
+openpyxl>=3.1
+# pandoc — внешний бинарник (для legacy .doc), ставится отдельно: https://pandoc.org/installing.html
