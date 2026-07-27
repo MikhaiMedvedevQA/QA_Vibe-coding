@@ -73,7 +73,6 @@ $RECYCLE.BIN/
 /.claude/skills/python/
 /.claude/skills/qa-essay-structured/
 /.claude/skills/qa-essay-free/
-/.claude/skills/qa-generate-test-cases/
 
 # Среда / кэш / внешние инструменты
 .playwright-mcp/
@@ -120,6 +119,13 @@ anonimized/
 *_anon.json
 *_anon_review.json
 *_anon_assets/
+
+# Результаты деанонимизатора (содержат РЕАЛЬНЫЕ значения — никогда в репозиторий).
+deanonimized/
+*_deanon.md
+*_deanon.json
+*_deanon_review.json
+_deanon_index.json
 
 # Вспомогательные/legacy-скрипты в tools/ (не относятся к ядру дипломного проекта).
 # В репозитории остаются только tools/anonymize/ и tools/anonymize_gui/.

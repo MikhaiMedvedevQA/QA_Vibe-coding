@@ -44,6 +44,10 @@ class AnonymizeApp:
         self.content = None          # DocumentContent | ExcelContent
         self.source_path: Path | None = None
         self.last_out_path: Path | None = None
+        # Состояние навигации по вхождениям выбранного кандидата.
+        self._sel_value: str | None = None
+        self._sel_positions: dict = {}   # {widget: [offset, ...]}
+        self._sel_index: dict = {}       # {widget: int}
 
         self._build_ui()
         self._set_state("idle")
@@ -77,11 +81,17 @@ class AnonymizeApp:
         left = ttk.LabelFrame(panes, text="До (исходный текст)")
         left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.before_text = self._make_text_widget(left)
+        self.before_text.tag_configure("cand", foreground="#b00", background="#ffd0d0")
+        self.before_text.tag_configure("sel-cand", foreground="#000", background="#ffff80")
+        self.before_text.tag_raise("sel-cand")
 
         right = ttk.LabelFrame(panes, text="После (псевдонимы подсвечены)")
         right.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(8, 0))
         self.after_text = self._make_text_widget(right)
         self.after_text.tag_configure("pseudo", foreground="#b00", background="#ffe9b3")
+        self.after_text.tag_configure("cand", foreground="#b00", background="#ffd0d0")
+        self.after_text.tag_configure("sel-cand", foreground="#000", background="#ffff80")
+        self.after_text.tag_raise("sel-cand")
 
         # Панель ревью-кандидатов: подозрительные совпадения, не заменённые
         # детектором (пропущенные продукты/СК/банки/ФИО в контексте).
@@ -105,16 +115,55 @@ class AnonymizeApp:
         self.btn_open_review = ttk.Button(rv_btns, text="Открыть _review.json",
                                           command=self.on_open_review, state=tk.DISABLED)
         self.btn_open_review.pack(padx=4, pady=4)
+        self.btn_prev = ttk.Button(rv_btns, text="← Пред.",
+                                  command=self.on_prev_candidate, state=tk.DISABLED)
+        self.btn_prev.pack(padx=4, pady=4)
+        self.btn_next = ttk.Button(rv_btns, text="След. →",
+                                   command=self.on_next_candidate, state=tk.DISABLED)
+        self.btn_next.pack(padx=4, pady=4)
 
     def _make_text_widget(self, parent) -> tk.Text:
         wrap = tk.Frame(parent)
         wrap.pack(fill=tk.BOTH, expand=True)
-        txt = tk.Text(wrap, wrap=tk.WORD, undo=False, font=("Consolas", 10))
+        # Гидтер с номерами строк — синхронизирован по вертикали с текстом.
+        gutter = tk.Text(
+            wrap, width=5, wrap=tk.NONE, font=("Consolas", 10),
+            background="#f0f0f0", padx=4, borderwidth=1,
+            highlightthickness=0, takefocus=0, state=tk.DISABLED,
+        )
+        # Текст без переноса строк — одна логическая строка = одна экранная,
+        # номера строк слева и справа совпадают построчно.
+        txt = tk.Text(wrap, wrap=tk.NONE, undo=False, font=("Consolas", 10),
+                      borderwidth=1, highlightthickness=0)
         sb = ttk.Scrollbar(wrap, orient=tk.VERTICAL, command=txt.yview)
-        txt.configure(yscrollcommand=sb.set)
-        sb.pack(side=tk.RIGHT, fill=tk.Y)
-        txt.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        xsb = ttk.Scrollbar(wrap, orient=tk.HORIZONTAL, command=txt.xview)
+        # Grid: gutter | txt | vscroll ; (— | hscroll | —)
+        wrap.grid_rowconfigure(0, weight=1)
+        wrap.grid_columnconfigure(1, weight=1)
+        gutter.grid(row=0, column=0, sticky="ns")
+        txt.grid(row=0, column=1, sticky="nsew")
+        sb.grid(row=0, column=2, sticky="ns")
+        xsb.grid(row=1, column=1, sticky="ew")
+
+        def _on_yscroll(*args):
+            gutter.yview_moveto(args[0])
+            sb.set(*args)
+
+        txt.configure(yscrollcommand=_on_yscroll, xscrollcommand=xsb.set)
+        # Связываем гидтер с виджетом для последующего обновления номеров.
+        txt._gutter = gutter
         return txt
+
+    def _update_gutter(self, widget: tk.Text) -> None:
+        """Перестроить номера строк в гидтере по содержимому текстового виджета."""
+        gutter = getattr(widget, "_gutter", None)
+        if gutter is None:
+            return
+        n = int(widget.index("end-1c").split(".")[0])
+        gutter.config(state=tk.NORMAL)
+        gutter.delete("1.0", tk.END)
+        gutter.insert("1.0", "\n".join(str(i) for i in range(1, n + 1)))
+        gutter.config(state=tk.DISABLED)
 
     def _set_state(self, state: str):
         if state == "idle":
@@ -160,9 +209,12 @@ class AnonymizeApp:
         self.last_out_path = None
         self.before_text.delete("1.0", tk.END)
         self.after_text.delete("1.0", tk.END)
+        self._update_gutter(self.before_text)
+        self._update_gutter(self.after_text)
         self.review_tree.delete(*self.review_tree.get_children())
         self.btn_ignore.config(state=tk.DISABLED)
         self.btn_open_review.config(state=tk.DISABLED)
+        self._clear_selection()
         self.status.config(text="файл выбран, нажмите «Анонимизировать»")
         self._set_state("idle")
 
@@ -203,6 +255,9 @@ class AnonymizeApp:
         self.after_text.delete("1.0", tk.END)
         self.before_text.insert(tk.END, "\n".join(before))
         self.after_text.insert(tk.END, "\n".join(after))
+        # Номера строк слева — чтобы сопоставлять «до» и «после» построчно.
+        self._update_gutter(self.before_text)
+        self._update_gutter(self.after_text)
         # Подсветка псевдонимов в правой панели.
         self._highlight_pseudonyms(self.after_text)
         # Ревью-кандидаты.
@@ -213,6 +268,11 @@ class AnonymizeApp:
             self.review_tree.insert("", tk.END, values=(
                 c["value"], c["type_guess"], c["reason"], c["count"], locs,
             ))
+        # Подсветка кандидатов красным в обеих панелях предпросмотра.
+        self._highlight_candidates(self.before_text, cands)
+        self._highlight_candidates(self.after_text, cands)
+        # Текст панелей обновился — сбрасываем навигацию по вхождениям.
+        self._clear_selection()
         stats = self.mapper.stats()
         total = sum(stats.values())
         summary = ", ".join(f"{t}: {n}" for t, n in sorted(stats.items())) if stats else "ничего не найдено"
@@ -229,7 +289,87 @@ class AnonymizeApp:
         messagebox.showerror("Ошибка", msg)
 
     def _on_review_select(self, _event=None):
-        self.btn_ignore.config(state=tk.NORMAL if self.review_tree.selection() else tk.DISABLED)
+        sel = self.review_tree.selection()
+        self.btn_ignore.config(state=tk.NORMAL if sel else tk.DISABLED)
+        if sel:
+            value = str(self.review_tree.item(sel[0])["values"][0])
+            self._set_selection(value)
+        else:
+            self._clear_selection()
+
+    def _set_selection(self, value: str) -> None:
+        """Собрать все вхождения значения кандидата в обеих панелях,
+        подсветить первое и включить навигацию."""
+        value = value.strip()
+        self._sel_value = value or None
+        self._sel_positions = {}
+        self._sel_index = {}
+        if not value:
+            self._disable_nav()
+            return
+        for widget in (self.before_text, self.after_text):
+            widget.tag_remove("sel-cand", "1.0", tk.END)
+            text = widget.get("1.0", tk.END)
+            positions = []
+            start = 0
+            while True:
+                idx = text.find(value, start)
+                if idx == -1:
+                    break
+                positions.append(idx)
+                start = idx + len(value)
+            self._sel_positions[widget] = positions
+            self._sel_index[widget] = 0
+            self._show_sel(widget)
+        total = max((len(p) for p in self._sel_positions.values()), default=0)
+        nav = tk.NORMAL if total > 1 else tk.DISABLED
+        self.btn_prev.config(state=nav)
+        self.btn_next.config(state=nav)
+
+    def _clear_selection(self) -> None:
+        self._sel_value = None
+        self._sel_positions = {}
+        self._sel_index = {}
+        for widget in (self.before_text, self.after_text):
+            widget.tag_remove("sel-cand", "1.0", tk.END)
+        self._disable_nav()
+
+    def _disable_nav(self) -> None:
+        self.btn_prev.config(state=tk.DISABLED)
+        self.btn_next.config(state=tk.DISABLED)
+
+    def _show_sel(self, widget) -> None:
+        """Подсветить текущее вхождение и прокрутить к нему."""
+        positions = self._sel_positions.get(widget, [])
+        i = self._sel_index.get(widget, 0)
+        value = self._sel_value
+        if not positions or not value:
+            return
+        idx = positions[i]
+        text = widget.get("1.0", tk.END)
+        s = self._offset_to_index(text, idx)
+        e = self._offset_to_index(text, idx + len(value))
+        widget.tag_remove("sel-cand", "1.0", tk.END)
+        widget.tag_add("sel-cand", s, e)
+        widget.see(s)
+
+    def on_prev_candidate(self):
+        self._step_candidate(-1)
+
+    def on_next_candidate(self):
+        self._step_candidate(1)
+
+    def _step_candidate(self, direction: int) -> None:
+        if not self._sel_value:
+            return
+        for widget in (self.before_text, self.after_text):
+            positions = self._sel_positions.get(widget, [])
+            n = len(positions)
+            if n < 2:
+                continue
+            i = (self._sel_index[widget] + direction) % n
+            self._sel_index[widget] = i
+            self._show_sel(widget)
 
     def on_ignore(self):
         """Добавить выбранное значение в dictionaries/ignore.txt (white-list)
@@ -247,10 +387,22 @@ class AnonymizeApp:
         self.btn_ignore.config(state=tk.DISABLED)
 
     def on_open_review(self):
-        if self.last_out_path and self.last_out_path.exists():
-            review_path = self.last_out_path.parent / f"{self.last_out_path.stem}_review.json"
-            if review_path.exists():
-                os.startfile(review_path)
+        if not self.source_path:
+            return
+        out_dir = config.output_dir(self.source_path)
+        stem = f"{self.source_path.stem}_anon"
+        review_path = out_dir / f"{stem}_review.json"
+        # На этапе предпросмотра _review.json ещё не записан — генерируем его
+        # на лету из текущего content, чтобы кнопка работала без «Сохранить».
+        if not review_path.exists() and self.content is not None:
+            review_path = writers.write_review_file(self.content, out_dir, stem, self.mapper)
+        if review_path and review_path.exists():
+            os.startfile(review_path)
+        else:
+            messagebox.showinfo(
+                "Нет кандидатов",
+                "Ревью-кандидаты не найдены — файл _review.json не создан.",
+            )
 
     def _highlight_pseudonyms(self, widget: tk.Text):
         text = widget.get("1.0", tk.END)
@@ -259,6 +411,27 @@ class AnonymizeApp:
             start = self._offset_to_index(text, m.start())
             end = self._offset_to_index(text, m.end())
             widget.tag_add("pseudo", start, end)
+
+    def _highlight_candidates(self, widget: tk.Text, cands: list) -> None:
+        """Подсветить значения ревью-кандидатов красным (все вхождения)."""
+        if not cands:
+            return
+        text = widget.get("1.0", tk.END)
+        # Сортируем по убыванию длины: длинные значения приоритетнее,
+        # чтобы подсветка не «откусила» часть более длинного совпадения.
+        vals = sorted({str(c.get("value", "")).strip() for c in cands}, key=len, reverse=True)
+        for val in vals:
+            if not val:
+                continue
+            start = 0
+            while True:
+                idx = text.find(val, start)
+                if idx == -1:
+                    break
+                s = self._offset_to_index(text, idx)
+                e = self._offset_to_index(text, idx + len(val))
+                widget.tag_add("cand", s, e)
+                start = idx + len(val)
 
     @staticmethod
     def _offset_to_index(text: str, offset: int) -> str:

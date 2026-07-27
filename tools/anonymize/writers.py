@@ -155,8 +155,18 @@ def build_original_text(content) -> list[str]:
         if isinstance(b, TextBlock):
             lines.append(b.text)
         elif isinstance(b, ImageBlock):
+            # Две строки в «до» — чтобы совпадало построчно с «после»,
+            # где ImageBlock занимает комментарий-маркер + плейсхолдер.
+            lines.append(
+                f"<!-- изображение {b.asset_id} | src_page={b.src_page} | "
+                f"note=\"{b.note}\" -->"
+            )
             lines.append(f"[изображение {b.asset_id}]")
         elif isinstance(b, EmbeddedBlock):
+            lines.append(
+                f"<!-- вложение {b.asset_id} | original={b.original_filename} | "
+                f"prog_id={b.prog_id} | note=\"{b.note}\" -->"
+            )
             lines.append(f"[вложение {b.asset_id} — {b.original_filename}]")
         elif isinstance(b, TableBlock):
             lines.extend(_md_table(b.rows))
