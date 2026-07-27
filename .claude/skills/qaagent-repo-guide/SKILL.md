@@ -39,8 +39,10 @@ description: Помогает Claude Code и коллегам работать �
 │   │   ├── mapping.example.json  # пустой шаблон маппинга (реальный mapping.json в .gitignore)
 │   │   ├── dictionaries/     # словари сущностей: *.example.txt — шаблоны, *.txt — локально
 │   │   └── tests/            # pytest-кейсы (detectors, review-candidates)
-│   └── anonymize_gui/        # десктоп-GUI на Tkinter
-│       └── app.py            # python tools/anonymize_gui/app.py
+│   ├── anonymize_gui/        # десктоп-GUI на Tkinter
+│   │   └── app.py            # python tools/anonymize_gui/app.py
+│   └── deanonymize/          # деанонимайзер артефактов по mapping.json
+│       └── deanonymize.py    # python tools/deanonymize/deanonymize.py <файл|папка>
 ├── .claude/
 │   ├── agents/               # router, qa-assistant
 │   └── skills/               # скиллы чек-листов + этот qaagent-repo-guide
@@ -108,6 +110,22 @@ python tools/anonymize_gui/app.py
 
 Выбор файла → анонимизация с предпросмотром «до/после» → сохранение рядом с исходником. Панель ревью — разбор кандидатов и кнопка «В ignore.txt».
 
+### Деанонимизация артефактов
+
+Чтобы прочитать готовый артефакт в исходном виде (реальные значения вместо псевдонимов) — на той же машине, где есть `mapping.json`:
+
+```bash
+python tools/deanonymize/deanonymize.py <файл_или_папка> [--mapping FILE] [--out DIR]
+```
+
+| Параметр     | Назначение                                                                                 |
+|--------------|--------------------------------------------------------------------------------------------|
+| `path`       | Файл-артефакт или папка (рекурсивно `.md`/`.json`; подпапки `*_assets/` пропускаются).      |
+| `--mapping`  | Путь к `mapping.json` (по умолчанию `tools/anonymize/mapping.json`).                       |
+| `--out`      | Каталог вывода (по умолчанию `deanonimized/` рядом с `anonimized/`).                       |
+
+Вывод: `…_anon.md` → `…_deanon.md`, `…_anon.json` → `…_deanon.json`, `…_anon_review.json` → `…_deanon_review.json`, `index.json` → `_deanon_index.json`. Неразрешённые псевдонимы (нет в `mapping.json`) остаются как есть и печатаются списком. Деанонимизированные файлы содержат **реальные** данные → `deanonimized/` и `*_deanon.*` в `.gitignore`.
+
 ## Проверка ошибок (обязательно после правок)
 
 ```bash
@@ -150,6 +168,7 @@ python -m pytest -k review     # по ключевому слову
 - `tools/anonymize/dictionaries/*.txt` (кроме `.example`) — реальные сущности (банки, СК, продукты, ФИО, организации).
 - `tools/anonymize/mapping.json` — маппинг «оригинал → псевдоним» (по нему восстанавливаются исходные сущности).
 - Результаты прогонов: `anonimized/`, `*_anon.md`, `*_anon.json`, `*_anon_review.json`, `*_anon_assets/`.
+- Результаты деанонимизации: `deanonimized/`, `*_deanon.md`, `*_deanon.json`, `*_deanon_review.json`, `_deanon_index.json` — восстановленные по `mapping.json` артефакты с реальными значениями.
 - `.env`, `.claude/settings.local.json`, `.claude/mcp.json`, `.mcp.json`, `.claude/plans/`.
 - Рабочие/личные папки: `work/`, `references/`, `learn/`, `reports/*` (кроме `Diplom Project/`).
 
@@ -166,7 +185,9 @@ python -m pytest -k review     # по ключевому слову
 | `LF will be replaced by CRLF` | нормализация переносов на Windows | безобидно, игнорировать. |
 | Псевдонимы плодятся / сбивается нумерация | `mapping.json` накопил мусор | `--reset-mapping` (осторожно: нарушает консистентность между документами). |
 | Скилл не находится агентом | нет записи в реестре / неверное `name` в YAML | проверить `name:` в `SKILL.md` и строку в `.claude/skills/README.md`. |
+| Деанонимизатор: `Файл маппинга не найден` | нет `mapping.json` | сначала прогнать анонимизатор (создаст `mapping.json`), либо указать `--mapping`. |
+| Деанонимизатор: много неразрешённых псевдонимов | `mapping.json` не из того прогона / был сброшен | использовать маппинг, актуальный для данных артефактов; нераскрытые псевдонимы остаются как есть. |
 
 ## Быстрый онбординг для коллеги (один абзац)
 
-Склонируй репо, создай venv, поставь `tools/anonymize/requirements.txt`, скопируй `*.example.txt` → `*.txt` (persons, banks, insurance, products, orgs, ignore) и `mapping.example.json` → `mapping.json` в `tools/anonymize/`, прогони `python tools/anonymize/anonymize.py <твой_файл.xlsx>` — получишь обезличенный `.md` и JSON-датасет полей. Чек-листы генерируются в Claude Code скиллами из этого датасета (см. таблицу скиллов в корневом README). Реальные словари и `mapping.json` в репо не входят — они локальные, не коммить их. GUI: `python tools/anonymize_gui/app.py`.
+Склонируй репо, создай venv, поставь `tools/anonymize/requirements.txt`, скопируй `*.example.txt` → `*.txt` (persons, banks, insurance, products, orgs, ignore) и `mapping.example.json` → `mapping.json` в `tools/anonymize/`, прогони `python tools/anonymize/anonymize.py <твой_файл.xlsx>` — получишь обезличенный `.md` и JSON-датасет полей. Чек-листы генерируются в Claude Code скиллами из этого датасета (см. таблицу скиллов в корневом README). Чтобы прочитать готовый артефакт в исходном виде — `python tools/deanonymize/deanonymize.py anonimized/` (нужен `mapping.json`). Реальные словари, `mapping.json` и `deanonimized/` в репо не входят — они локальные, не коммить их. GUI: `python tools/anonymize_gui/app.py`.

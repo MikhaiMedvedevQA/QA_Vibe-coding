@@ -59,6 +59,11 @@ flowchart LR
   
   ![скриншот GUI](/images/img1.png)
 
+**Деанонимайзер (`tools/deanonymize/`)**
+- Восстанавливает читаемые значения в готовых артефактах (`_anon.md`, `_anon.json`, `_review.json`, `index.json`) по `mapping.json` — чтобы читать готовые артефакты без псевдонимов.
+- Неразрешённые псевдонимы (нет в маппинге) остаются как есть и выводятся списком.
+- Вывод — в `deanonimized/` рядом с `anonimized/` (в `.gitignore`, т.к. содержит реальные данные).
+
 **Скиллы (`.claude/skills/`)**
 - Атомарные чек-листы по аспектам: обязательность, дефолты, доступность, валидация, полное покрытие.
 - Принимают JSON-датасет анонимизатора (не Excel напрямую) — зависят от стабильного слоя данных.
@@ -104,8 +109,10 @@ python tools/anonymize/anonymize.py path/to/spec.xlsx
 │   │   ├── mapping.example.json  # пустой шаблон маппинга (реальный mapping.json в .gitignore)
 │   │   ├── dictionaries/     # словари сущностей: *.example.txt — шаблоны, *.txt — локально
 │   │   └── tests/            # pytest-кейсы (detectors, review-candidates)
-│   └── anonymize_gui/        # десктоп-GUI на Tkinter
-│       └── app.py            # python tools/anonymize_gui/app.py
+│   ├── anonymize_gui/        # десктоп-GUI на Tkinter
+│   │   └── app.py            # python tools/anonymize_gui/app.py
+│   └── deanonymize/          # деанонимайзер артефактов по mapping.json
+│       └── deanonymize.py    # python tools/deanonymize/deanonymize.py <файл|папка>
 ├── .claude/
 │   ├── agents/               # субагенты: router, qa-assistant
 │   └── skills/               # скиллы генерации чек-листов и вспомогательные (см. таблицу)
@@ -175,6 +182,24 @@ python tools/anonymize_gui/app.py
 
 Выбор файла → анонимизация с предпросмотром «до/после» (псевдонимы подсвечены) → сохранение результата рядом с исходником. Панель ревью — разбор кандидатов и кнопка «В ignore.txt».
 
+## Деанонимизация артефактов
+
+Чтобы прочитать готовый артефакт в исходном виде (реальные значения вместо псевдонимов) — на той же машине, где есть `mapping.json`:
+
+```bash
+python tools/deanonymize/deanonymize.py <файл_или_папка> [--mapping FILE] [--out DIR]
+```
+
+| Параметр     | Назначение                                                                                 |
+|--------------|--------------------------------------------------------------------------------------------|
+| `path`       | Файл-артефакт или папка (рекурсивно `.md`/`.json`; подпапки `*_assets/` пропускаются).      |
+| `--mapping`  | Путь к `mapping.json` (по умолчанию `tools/anonymize/mapping.json`).                       |
+| `--out`      | Каталог вывода (по умолчанию `deanonimized/` рядом с `anonimized/`).                       |
+
+Вывод: `…_anon.md` → `…_deanon.md`, `…_anon.json` → `…_deanon.json`, `…_anon_review.json` → `…_deanon_review.json`, `index.json` → `_deanon_index.json`. Неразрешённые псевдонимы (нет в `mapping.json`) остаются как есть и печатаются списком в конце прогона.
+
+Внимание: деанонимизированные файлы содержат **реальные** ПД/сущности — папка `deanonimized/` и `*_deanon.*` исключены из репозитория (см. `.gitignore`).
+
 ## Генерация чек-листов (слоем скиллов)
 
 Скиллы работают в Claude Code и принимают на вход JSON-датасет анонимизатора (не Excel напрямую) + опционально текстовое ТЗ:
@@ -221,6 +246,7 @@ python -m pytest
 - `reports/*` (кроме `Diplom Project/`) — рабочие отчёты.
 - `.claude/plans/`, `.claude/settings.local.json`, `.claude/mcp.json`, `.mcp.json`, `.env`, `.idea/` — локальные настройки, секреты, среда.
 - Результаты прогонов: `anonimized/`, `*_anon.md`, `*_anon.json`, `*_anon_review.json`, `*_anon_assets/` — обезличенные выходы и ассеты.
+- Результаты деанонимизации: `deanonimized/`, `*_deanon.md`, `*_deanon.json`, `*_deanon_review.json`, `_deanon_index.json` — восстановленные по `mapping.json` артефакты с реальными значениями.
 
 Полный список — в `.gitignore` в корне репозитория.
 
